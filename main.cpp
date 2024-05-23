@@ -11,6 +11,7 @@ void load_text_from_file(char **text, int *text_len, int *text_size);
 void print_loaded_text(const char *text);
 void clear_console();
 void search_position(const char *text);
+void append_by_coordinate(char *text, int *text_len, int *text_size);
 
 int main() {
     setbuf(stdout, 0);
@@ -47,7 +48,7 @@ int main() {
                 print_loaded_text(text);
                 break;
             case '6':
-                //append_by_coordinate();
+                append_by_coordinate(text, &text_len, &text_size);
                 break;
             case '7':
                 search_position(text);
@@ -213,4 +214,73 @@ void search_position(const char *text) {
     if (count == 0) {
         printf("Input string was not found\n");
     }
+}
+
+void append_by_coordinate(char *text, int *text_len, int *text_size) {
+    int line = 0;
+    int i = 0;
+    int column = 0;
+
+    while (text[i] != '\0') {
+        if (text[i] == '\n') {
+            line++;
+            column = 0;
+        } else {
+            column++;
+        }
+        i++;
+    }
+
+    printf("There are %d lines and %d columns to enter text by coordinates\n", line + 1, column);
+    printf("But please start your counting from 0\n");
+
+    printf("Enter the line number: \n");
+    int line_number;
+    scanf("%d", &line_number);
+    printf("Enter the column number: \n");
+    int column_number;
+    scanf("%d", &column_number);
+
+    char input[30];
+    printf("Enter text you want to add: \n");
+    fgets(input, sizeof(input), stdin);
+    input[strcspn(input, "\n")] = '\0';
+    int input_len = strlen(input);
+
+    if (*text_len + input_len >= *text_size) {
+        *text_size = (*text_len + input_len) * 2;
+        text = (char *)realloc(text, *text_size * sizeof(char));
+    }
+
+    int insertion_line = 0;
+    int insertion_column = 0;
+    int insert_index = -1;
+    i = 0;
+
+    while (text[i] != '\0') {
+        if (insertion_line == line_number && insertion_column == column_number) {
+            insert_index = i;
+            break;
+        }
+        if (text[i] == '\n') {
+            insertion_line++;
+            insertion_column = 0;
+        } else {
+            insertion_column++;
+        }
+        i++;
+    }
+
+    // insertion at the very beginning
+    if (insert_index == -1) {
+        insert_index = *text_len;
+    }
+
+    // shift text to make room for the new text
+    memmove(&text[insert_index + input_len], &text[insert_index], (*text_len - insert_index) + 1);
+
+    // insert the new text
+    memcpy(&text[insert_index], input, input_len);
+
+    *text_len += input_len;
 }
