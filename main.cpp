@@ -279,9 +279,12 @@ void append_by_coordinate(char *text, int *text_len, int *text_size) {
 
     // shift text to make room for the new text
     memmove(&text[insert_index + input_len], &text[insert_index], (*text_len - insert_index) + 1);
+    //вказівник на місце в масиві, вказівник на початок, к-сть байт на яку треба зсунути
 
     // insert the new text
     memcpy(&text[insert_index], input, input_len);
+    //вказівник на місце в масиві де хочеми вставити, вказівник на початок масиву input, який містить текст,який ми хочемо вставити;
+    // кількість байтів, які потрібно скопіювати з input у text. це довжина нового тексту, який ми вставляємо
 
     *text_len += input_len;
 }
