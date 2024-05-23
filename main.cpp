@@ -277,11 +277,6 @@ void append_by_coordinate(char *text, int *text_len, int *text_size) {
         i++;
     }
 
-    // insertion at the very beginning
-    if (insert_index == -1) {
-        insert_index = *text_len;
-    }
-
     // shift text to make room for the new text
     memmove(&text[insert_index + input_len], &text[insert_index], (*text_len - insert_index) + 1);
 
