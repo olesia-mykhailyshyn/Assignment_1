@@ -2,13 +2,15 @@
 #include <string.h>
 #include <stdlib.h>
 #include <conio.h>
-
+// calloc зануляє
+// malloc швидший
 void append_text(char **text, int *text_len, int *text_size);
 void start_new_line(char **text, int *text_len, int *text_size);
 void save_text_to_file(const char *text);
 void load_text_from_file(char **text, int *text_len, int *text_size);
 void print_loaded_text(const char *text);
 void clear_console();
+void search_position(const char *text);
 
 int main() {
     setbuf(stdout, 0);
@@ -48,7 +50,7 @@ int main() {
                 //append_by_coordinate();
                 break;
             case '7':
-                //search_position();
+                search_position(text);
                 break;
             case '8':
                 clear_console();
@@ -68,11 +70,11 @@ void append_text(char **text, int *text_len, int *text_size) {
     printf("\nEnter text to append:\n");
 
     int input_len = 0;
-    int input_size = 80;
+    int input_size = 10;
     char *input = (char *)calloc(input_size, sizeof(char));
 
     int character;
-    while ((character = getchar()) != '\n' & EOF) {
+    while ((character = getchar()) != '\n') {
         if (input_len >= input_size - 1) {
             input_size *= 2;
             input = (char *)realloc(input, input_size * sizeof(char));
@@ -94,7 +96,7 @@ void append_text(char **text, int *text_len, int *text_size) {
 
 void start_new_line(char **text, int *text_len, int *text_size) {
     if (*text_len + 1 >= *text_size - 1) {
-        *text_size = (*text_size) * 2;
+        *text_size = (*text_size) + 1;
         *text = (char *)realloc(*text, *text_size * sizeof(char));
     }
     strcat(*text, "\n");
@@ -127,9 +129,9 @@ void load_text_from_file(char **text, int *text_len, int *text_size) {
 
     FILE *file = fopen(file_name, "r");
     if (file != NULL) {
-        fseek(file, 0, SEEK_END);
-        long file_size = ftell(file);
-        fseek(file, 0, SEEK_SET);
+        fseek(file, 0, SEEK_END); //pointer at the end of file
+        int file_size = ftell(file); //size in bytes --- from beginning to end
+        fseek(file, 0, SEEK_SET); //pointer is at start of file to do some actions with file then
 
         if (file_size == 0) {
             printf("\nThe file %s is empty\n", file_name);
@@ -137,29 +139,29 @@ void load_text_from_file(char **text, int *text_len, int *text_size) {
             return;
         }
 
-        char *loaded_text = (char *)calloc(file_size + 1, sizeof(char));
+        char *loaded_text = (char *)malloc(file_size + 1 * sizeof(char));
+        fread(loaded_text, sizeof(char), file_size, file);
         if (loaded_text == NULL) {
-            printf("\nMemory allocation failed\n");
+            printf("\nFile is empty\n");
             fclose(file);
             return;
         }
-
-        fread(loaded_text, sizeof(char), file_size, file);
         loaded_text[file_size] = '\0';
-
-        fclose(file);
 
         if (*text != NULL) {
             free(*text);
+            *text = NULL;
         }
         *text = loaded_text;
         *text_size = file_size + 1;
         *text_len = strlen(*text);
 
         printf("\nText has been loaded successfully\n");
-    } else {
+    }
+    else {
         printf("\nError opening file %s for reading\n", file_name);
     }
+    fclose(file);
 }
 
 void print_loaded_text(const char *text) {
@@ -174,5 +176,41 @@ void clear_console() {
     if (enter[0] == '\n') {
         system("cls");
         printf("\nCondole was cleared\n");
+    }
+}
+
+void search_position(const char *text) {
+    printf("Please write text to find out its location:\n");
+    char input[20];
+    fgets(input, sizeof(input), stdin);
+    input[strlen(input) - 1] = '\0';
+    int input_len = strlen(input);
+
+    int line = 0;
+    int i = 0;
+    int column = 0;
+    int count = 0;
+
+    while (text[i] != '\0') {
+        if (text[i] == '\n') {
+            line++;
+            i++;
+            column = 0;
+            continue;
+        }
+
+        if (strncmp(&text[i], input, input_len) == 0) {
+            printf("Input string was found at line %d, i %d\n", line, column);
+            count++;
+            i += input_len;
+            column += input_len;
+        } else {
+            i++;
+            column++;
+        }
+    }
+
+    if (count == 0) {
+        printf("Input string was not found\n");
     }
 }
