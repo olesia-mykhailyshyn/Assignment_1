@@ -2,6 +2,8 @@
 #include <string.h>
 #include <stdlib.h>
 #include <conio.h>
+#include <unistd.h> //access to file
+
 // calloc зануляє
 // malloc швидший
 void append_text(char **text, int *text_len, int *text_size);
@@ -112,18 +114,22 @@ void save_text_to_file(const char *text) {
     fgets(file_name, sizeof(file_name), stdin);
     file_name[strcspn(file_name, "\n")] = '\0';
 
-    FILE *file = fopen(file_name, "w");
-    if (file != NULL) {
-        fprintf(file, "%s", text);
-        fclose(file);
-        printf("\nText has been saved successfully\n");
-    } else {
-        printf("\nError opening file %s for writing\n", file_name);
+    if (access(file_name, F_OK) == 0){
+        FILE *file;
+        file = fopen(file_name, "w");
+        if (file != NULL) {
+            fprintf(file, "%s", text);
+            fclose(file);
+            printf("Text has been saved successfully\n");
+        }
+    }
+    else {
+        printf("Error opening file %s for writing\n", file_name);
     }
 }
 
 void load_text_from_file(char **text, int *text_len, int *text_size) {
-    printf("\nEnter the file name for loading: ");
+    printf("Enter the file name for loading: \n");
     char file_name[25];
     fgets(file_name, sizeof(file_name), stdin);
     file_name[strcspn(file_name, "\n")] = '\0';
@@ -135,18 +141,13 @@ void load_text_from_file(char **text, int *text_len, int *text_size) {
         fseek(file, 0, SEEK_SET); //pointer is at start of file to do some actions with file then
 
         if (file_size == 0) {
-            printf("\nThe file %s is empty\n", file_name);
+            printf("The file %s is empty\n", file_name);
             fclose(file);
             return;
         }
 
         char *loaded_text = (char *)malloc(file_size + 1 * sizeof(char));
         fread(loaded_text, sizeof(char), file_size, file);
-        if (loaded_text == NULL) {
-            printf("\nFile is empty\n");
-            fclose(file);
-            return;
-        }
         loaded_text[file_size] = '\0';
 
         if (*text != NULL) {
@@ -166,8 +167,8 @@ void load_text_from_file(char **text, int *text_len, int *text_size) {
 }
 
 void print_loaded_text(const char *text) {
-    printf("\nLoaded text:\n");
-    printf("\n%s\n", text);
+    printf("Loaded text:\n");
+    printf("%s\n", text);
 }
 
 void clear_console() {
@@ -201,7 +202,7 @@ void search_position(const char *text) {
         }
 
         if (strncmp(&text[i], input, input_len) == 0) {
-            printf("Input string was found at line %d, i %d\n", line, column);
+            printf("Input string was found at [%d][%d] coordinate\n", line, column);
             count++;
             i += input_len;
             column += input_len;
@@ -235,11 +236,15 @@ void append_by_coordinate(char *text, int *text_len, int *text_size) {
     printf("But please start your counting from 0\n");
 
     printf("Enter the line number: \n");
-    int line_number;
-    scanf("%d", &line_number);
+    char line_number_input[10];
+    fgets(line_number_input, sizeof(line_number_input), stdin);
+    line_number_input[strcspn(line_number_input, "\n")] = '\0';
     printf("Enter the column number: \n");
-    int column_number;
-    scanf("%d", &column_number);
+    char column_number_input[10];
+    fgets(column_number_input, sizeof(column_number_input), stdin);
+    line_number_input[strcspn(line_number_input, "\n")] = '\0';
+    int line_number = atoi(line_number_input); //atoi -- convert str to int
+    int column_number = atoi(column_number_input);
 
     char input[30];
     printf("Enter text you want to add: \n");
@@ -258,14 +263,15 @@ void append_by_coordinate(char *text, int *text_len, int *text_size) {
     i = 0;
 
     while (text[i] != '\0') {
-        if (insertion_line == line_number && insertion_column == column_number) {
+        if (insertion_line == line_number && insertion_column == column_number) {         //insert to the very end
             insert_index = i;
             break;
         }
         if (text[i] == '\n') {
             insertion_line++;
             insertion_column = 0;
-        } else {
+        }
+        else {
             insertion_column++;
         }
         i++;
