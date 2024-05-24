@@ -259,7 +259,7 @@ void append_by_coordinate(char *text, int *text_len, int *text_size) {
 
     int insertion_line = 0;
     int insertion_column = 0;
-    int insert_index = -1;
+    int insert_index = 0;
     i = 0;
 
     while (text[i] != '\0') {
